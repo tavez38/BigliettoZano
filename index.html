@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="night">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Missione Compleanno · Top Gun Academy</title>
+<style>
+/* =====================================================
+   1. VARIABILI TEMA — modifica qui i colori
+   ===================================================== */
+:root, :root[data-theme="night"] {
+  --bg: #0a0a0c;
+  --bg-2: #111419;
+  --panel: rgba(20, 26, 34, .72);
+  --accent: #00d2ff;
+  --accent-soft: rgba(0, 210, 255, .14);
+  --metal: #9aa4ae;
+  --text: #e8edf2;
+  --border: rgba(0, 210, 255, .35);
+  --glow: 0 0 24px rgba(0, 210, 255, .25);
+  --on-accent: #04141a;
+}
+:root[data-theme="gold"] {
+  --bg: #0a0a0a;
+  --bg-2: #14110a;
+  --panel: rgba(26, 22, 12, .72);
+  --accent: #d4af37;
+  --accent-soft: rgba(212, 175, 55, .14);
+  --metal: #a89f88;
+  --text: #f3ecd9;
+  --border: rgba(212, 175, 55, .4);
+  --glow: 0 0 24px rgba(212, 175, 55, .22);
+  --on-accent: #1a1405;
+}
+:root {
+  --error: #ff3b4e;
+  --ok: #3ddc84;
+  --font-head: "Trebuchet MS", "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-body: "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif;
+}
+
+/* =====================================================
+   2. BASE
+   ===================================================== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-body);
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at 50% 0%, var(--bg-2), var(--bg) 70%) fixed,
+    var(--bg);
+  overflow: hidden; /* niente scroll tra le sezioni */
+  -webkit-tap-highlight-color: transparent;
+  transition: background .5s;
+}
+/* griglia radar di sfondo */
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .07;
+  background-image:
+    linear-gradient(var(--accent) 1px, transparent 1px),
+    linear-gradient(90deg, var(--accent) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* =====================================================
+   3. LAYOUT A SCHERMATE
+   ===================================================== */
+.screen {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: max(20px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom));
+  overflow-y: auto;            /* solo scroll interno se il contenuto è alto */
+  opacity: 0; visibility: hidden; transform: translateY(18px);
+  transition: opacity .6s ease, transform .6s ease, visibility 0s linear .6s;
+}
+.screen.active {
+  opacity: 1; visibility: visible; transform: none;
+  transition: opacity .6s ease, transform .6s ease;
+}
+.card {
+  width: 100%; max-width: 640px; margin: auto;
+  background: var(--panel);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: clamp(22px, 5vw, 44px);
+  box-shadow: var(--glow);
+  position: relative;
+}
+.card::before, .card::after { /* angoli stile HUD */
+  content: ""; position: absolute; width: 22px; height: 22px; border: 2px solid var(--accent);
+}
+.card::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; border-top-left-radius: 18px; }
+.card::after  { bottom: -1px; right: -1px; border-left: 0; border-top: 0; border-bottom-right-radius: 18px; }
+
+.eyebrow { font-size: .72rem; letter-spacing: .3em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+h1, h2 { font-family: var(--font-head); font-weight: 600; letter-spacing: .04em; line-height: 1.15; }
+h1 { font-size: clamp(1.9rem, 7vw, 3.1rem); }
+h2 { font-size: clamp(1.4rem, 5vw, 2rem); margin-bottom: 14px; }
+h1 span { color: var(--accent); }
+p  { line-height: 1.65; color: var(--text); margin-bottom: 14px; }
+.muted { color: var(--metal); font-size: .95rem; }
+.divider { height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); margin: 20px 0; opacity: .6; }
+
+/* =====================================================
+   4. BOTTONI & INPUT
+   ===================================================== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 12px 26px;
+  font: 600 .95rem var(--font-head); letter-spacing: .14em; text-transform: uppercase;
+  color: var(--on-accent); background: var(--accent);
+  border: 0; border-radius: 10px; cursor: pointer; text-decoration: none;
+  box-shadow: var(--glow);
+  transition: transform .15s, filter .15s;
+}
+.btn:hover { filter: brightness(1.12); }
+.btn:active { transform: scale(.97); }
+.btn:focus-visible, .opt:focus-visible, .chip:focus-visible, input:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+.btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--border); box-shadow: none; }
+.btn[disabled] { opacity: .4; cursor: not-allowed; }
+
+.field { position: relative; margin: 18px 0 8px; }
+input[type="text"] {
+  width: 100%; min-height: 52px; padding: 14px 16px;
+  font: 1.05rem var(--font-body); color: var(--text);
+  background: rgba(0,0,0,.35); border: 1.5px solid var(--border); border-radius: 10px;
+  transition: border-color .2s, box-shadow .2s;
+}
+input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); outline: none; }
+
+/* ---- Stato errore ---- */
+.error input, .error .opt.wrong, .error-flag {
+  border-color: var(--error) !important;
+  animation: shake .45s, redpulse 1s ease-out;
+}
+.msg { min-height: 1.5em; margin: 8px 0 14px; font-size: .95rem; font-weight: 600; color: var(--error); opacity: 0; transition: opacity .25s; }
+.msg.show { opacity: 1; }
+@keyframes shake { 10%,90%{transform:translateX(-2px)} 20%,80%{transform:translateX(4px)} 30%,50%,70%{transform:translateX(-7px)} 40%,60%{transform:translateX(7px)} }
+@keyframes redpulse { 0%{box-shadow:0 0 0 0 rgba(255,59,78,.7)} 100%{box-shadow:0 0 0 14px rgba(255,59,78,0)} }
+
+/* ---- Quiz multiplo ---- */
+.opts { display: grid; gap: 12px; margin: 18px 0 6px; }
+.opt {
+  min-height: 52px; padding: 12px 16px; text-align: left;
+  font: 1rem var(--font-body); color: var(--text);
+  background: rgba(0,0,0,.3); border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer;
+  transition: background .2s, border-color .2s, transform .15s;
+}
+.opt:hover { background: var(--accent-soft); }
+.opt.right { border-color: var(--ok); background: rgba(61,220,132,.14); }
+.opt.wrong { background: rgba(255,59,78,.12); }
+
+/* ---- Ordinamento cronologico ---- */
+.chips { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 18px 0 6px; }
+.chip {
+  position: relative; min-height: 70px; padding: 12px; text-align: center;
+  font: 600 .95rem var(--font-head); color: var(--text);
+  background: rgba(0,0,0,.3); border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.chip small { display: block; font: .75rem var(--font-body); color: var(--metal); margin-top: 4px; }
+.chip.picked { border-color: var(--ok); background: rgba(61,220,132,.14); pointer-events: none; }
+.chip .n {
+  position: absolute; top: -9px; left: -9px; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--ok); color: #04140a; font: 700 .8rem var(--font-head);
+  display: none; align-items: center; justify-content: center;
+}
+.chip.picked .n { display: flex; }
+
+/* ---- Indizio sbloccato ---- */
+.clue {
+  display: none; margin-top: 18px; padding: 16px 18px;
+  border: 1px dashed var(--accent); border-radius: 12px; background: var(--accent-soft);
+}
+.clue.show { display: block; animation: pop .6s ease; }
+.clue .tag { font-size: .7rem; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); }
+.clue strong { display: block; font: 600 1.15rem var(--font-head); margin: 4px 0; }
+@keyframes pop { from { opacity: 0; transform: scale(.94) } to { opacity: 1; transform: none } }
+
+/* ---- Barra progresso ---- */
+.progress { display: flex; gap: 8px; margin-bottom: 22px; }
+.progress i { flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,.12); transition: background .4s; }
+.progress i.done { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+/* ---- Lista indizi riepilogo ---- */
+.dossier { list-style: none; margin: 18px 0; display: grid; gap: 10px; }
+.dossier li {
+  display: flex; gap: 12px; align-items: baseline; padding: 12px 14px;
+  border-left: 3px solid var(--accent); background: rgba(0,0,0,.25); border-radius: 0 10px 10px 0;
+}
+.dossier b { color: var(--accent); font: 600 .75rem var(--font-head); letter-spacing: .15em; text-transform: uppercase; min-width: 70px; }
+
+/* ---- Finale ---- */
+.gift { font: 600 clamp(1.1rem, 4vw, 1.4rem) var(--font-head); line-height: 1.5; padding: 18px; border: 1px solid var(--accent); border-radius: 12px; background: var(--accent-soft); margin: 16px 0 22px; }
+.signature { font: italic 1.25rem Georgia, "Times New Roman", serif; color: var(--accent); margin-top: 6px; }
+.center { text-align: center; }
+
+/* ---- Toggle tema ---- */
+#themeBtn {
+  position: fixed; top: max(12px, env(safe-area-inset-top)); right: 12px; z-index: 50;
+  min-height: 40px; padding: 8px 14px; font: .72rem var(--font-head); letter-spacing: .15em; text-transform: uppercase;
+  color: var(--accent); background: var(--panel); border: 1px solid var(--border); border-radius: 20px; cursor: pointer;
+}
+
+/* ---- Coriandoli ---- */
+.confetto { position: fixed; top: -12px; width: 8px; height: 14px; z-index: 60; pointer-events: none; animation: fall linear forwards; }
+@keyframes fall { to { transform: translateY(110vh) rotate(720deg); opacity: .9; } }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition-duration: .01s !important; }
+}
+@media (max-width: 420px) { .chips { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<button id="themeBtn" type="button" aria-label="Cambia tema cromatico">Tema: Notte</button>
+
+<!-- =====================================================
+     SEZIONE 1 — BENVENUTO
+     ===================================================== -->
+<section class="screen active" id="s-welcome" aria-labelledby="t-welcome">
+  <div class="card center">
+    <div class="eyebrow">Top Gun Academy · Briefing riservato</div>
+    <h1 id="t-welcome">Buon Compleanno,<br><span id="bdayName">Pilota</span></h1>
+    <div class="divider"></div>
+    <p>Per te una missione speciale. Hai davanti a te sei prove a tema storia militare, tra carri armati e aerei da combattimento, dalla Seconda Guerra Mondiale in poi.</p>
+    <p>Ogni prova superata ti consegna un indizio. Raccoglili tutti, individua il velivolo segreto e scopri il tuo regalo.</p>
+    <p class="muted">Le schermate si sbloccano una alla volta: sbagliare non è un problema, riprova pure.</p>
+    <button class="btn" type="button" data-go="s-g1">Inizia la Missione</button>
+  </div>
+</section>
+
+<!-- =====================================================
+     MINIGIOCO 1 — QUIZ A RISPOSTA MULTIPLA
+     ===================================================== -->
+<section class="screen" id="s-g1" aria-labelledby="t-g1">
+  <div class="card">
+    <div class="progress" aria-hidden="true"><i class="done"></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="eyebrow">Prova 1 di 6 · Riconoscimento</div>
+    <h2 id="t-g1">Cieli d'Inghilterra</h2>
+    <p>Estate 1940. Un caccia britannico monoposto, dalla caratteristica ala ellittica, diventa il simbolo della Battaglia d'Inghilterra. Quale?</p>
+    <div class="opts" id="g1opts" role="group" aria-label="Risposte">
+      <button class="opt" type="button" data-ok="0">Messerschmitt Bf 109</button>
+      <button class="opt" type="button" data-ok="1">Supermarine Spitfire</button>
+      <button class="opt" type="button" data-ok="0">North American P-51 Mustang</button>
+      <button class="opt" type="button" data-ok="0">Mitsubishi A6M Zero</button>
+    </div>
+    <div class="msg" id="g1msg" role="alert" aria-live="assertive">Risposta errata, riprova!</div>
+    <div class="clue" id="g1clue">
+      <span class="tag">Indizio 1 sbloccato</span>
+      <strong>Ruolo operativo: caccia multiruolo</strong>
+      <span class="muted">Progettato per missioni aria-aria e aria-superficie, imbarcabile su portaerei.</span>
+    </div>
+    <p></p>
+    <button class="btn" type="button" id="g1next" data-go="s-g2" hidden>Prossima prova</button>
+  </div>
+</section>
+
+<!-- =====================================================
+     MINIGIOCO 2 — INDOVINELLO A RISPOSTA LIBERA
+     ===================================================== -->
+<section class="screen" id="s-g2" aria-labelledby="t-g2">
+  <div class="card">
+    <div class="progress" aria-hidden="true"><i class="done"></i><i class="done"></i><i></i><i></i><i></i><i></i></div>
+    <div class="eyebrow">Prova 2 di 6 · Indovinello</div>
+    <h2 id="t-g2">Acciaio americano</h2>
+    <p>Fu il carro armato più prodotto dagli Stati Uniti nella Seconda Guerra Mondiale, oltre 49.000 esemplari. Prende il nome da un generale dell'Unione della Guerra Civile americana. I soldati britannici lo chiamavano anche «Ronson».</p>
+    <p class="muted">Come si chiama? (una sola parola)</p>
+    <div id="g2form" class="field">
+      <input type="text" id="g2input" aria-label="Risposta" aria-describedby="g2msg" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Scrivi qui la risposta…" enterkeyhint="done">
+    </div>
+    <div class="msg" id="g2msg" role="alert" aria-live="assertive">Risposta errata, riprova!</div>
+    <button class="btn" type="button" id="g2check">Verifica</button>
+    <div class="clue" id="g2clue">
+      <span class="tag">Indizio 2 sbloccato</span>
+      <strong>Entrata in servizio: 1983</strong>
+      <span class="muted">Primo volo nel 1978, servizio operativo con l'US Navy e i Marines dal 1983.</span>
+    </div>
+    <p></p>
+    <button class="btn" type="button" id="g2next" data-go="s-g3" hidden>Prossima prova</button>
+  </div>
+</section>
+
+<!-- =====================================================
+     MINIGIOCO 3 — ORDINAMENTO CRONOLOGICO
+     ===================================================== -->
+<section class="screen" id="s-g3" aria-labelledby="t-g3">
+  <div class="card">
+    <div class="progress" aria-hidden="true"><i class="done"></i><i class="done"></i><i class="done"></i><i></i><i></i><i></i></div>
+    <div class="eyebrow">Prova 3 di 6 · Cronologia</div>
+    <h2 id="t-g3">Linea del tempo</h2>
+    <p>Tocca i quattro mezzi in ordine cronologico, dal più antico al più recente, in base all'anno di primo volo o di prima entrata in servizio. Un errore azzera la sequenza.</p>
+    <div class="chips" id="g3chips" role="group" aria-label="Mezzi da ordinare">
+      <!-- l'ordine nel markup è volutamente mescolato; data-order = posizione corretta -->
+      <button class="chip" type="button" data-order="3">F-4 Phantom II<small>Caccia, USA</small><span class="n"></span></button>
+      <button class="chip" type="button" data-order="1">Supermarine Spitfire<small>Caccia, Regno Unito</small><span class="n"></span></button>
+      <button class="chip" type="button" data-order="4">M1 Abrams<small>Carro armato, USA</small><span class="n"></span></button>
+      <button class="chip" type="button" data-order="2">M4 Sherman<small>Carro armato, USA</small><span class="n"></span></button>
+    </div>
+    <div class="msg" id="g3msg" role="alert" aria-live="assertive">Sequenza errata, riprova!</div>
+    <div class="clue" id="g3clue">
+      <span class="tag">Indizio 3 sbloccato</span>
+      <strong>Mach 1,8 · circa 23.500 kg al decollo</strong>
+      <span class="muted">Velocità massima oltre 1.900 km/h, peso massimo al decollo di circa 23,5 tonnellate. Due motori, un pilota.</span>
+    </div>
+    <p></p>
+    <button class="btn" type="button" id="g3next" data-go="s-g4" hidden>Prossima prova</button>
+  </div>
+</section>
+
+<!-- =====================================================
+     MINIGIOCO 4 — QUIZ A RISPOSTA MULTIPLA (carri armati)
+     ===================================================== -->
+<section class="screen" id="s-g4" aria-labelledby="t-g4">
+  <div class="card">
+    <div class="progress" aria-hidden="true"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i></i><i></i></div>
+    <div class="eyebrow">Prova 4 di 6 · Riconoscimento</div>
+    <h2 id="t-g4">Il terrore dei carri</h2>
+    <p>Entrato in servizio nel 1942, questo carro armato pesante tedesco era armato con un potente cannone da 88 mm e divenne temutissimo dagli Alleati. Quale?</p>
+    <div class="opts" id="g4opts" role="group" aria-label="Risposte">
+      <button class="opt" type="button" data-ok="0">Panzer IV</button>
+      <button class="opt" type="button" data-ok="0">Panther</button>
+      <button class="opt" type="button" data-ok="1">Tiger I</button>
+      <button class="opt" type="button" data-ok="0">T-34</button>
+    </div>
+    <div class="msg" id="g4msg" role="alert" aria-live="assertive">Risposta errata, riprova!</div>
+    <div class="clue" id="g4clue">
+      <span class="tag">Indizio 4 sbloccato</span>
+      <strong>Propulsione: due motori General Electric F404</strong>
+      <span class="muted">Due turboventole con postbruciatore, circa 71 kN di spinta ciascuna.</span>
+    </div>
+    <p></p>
+    <button class="btn" type="button" id="g4next" data-go="s-g5" hidden>Prossima prova</button>
+  </div>
+</section>
+
+<!-- =====================================================
+     MINIGIOCO 5 — INDOVINELLO A RISPOSTA LIBERA (elicotteri)
+     ===================================================== -->
+<section class="screen" id="s-g5" aria-labelledby="t-g5">
+  <div class="card">
+    <div class="progress" aria-hidden="true"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i></i></div>
+    <div class="eyebrow">Prova 5 di 6 · Indovinello</div>
+    <h2 id="t-g5">Il carro armato volante</h2>
+    <p>Aereo d'attacco al suolo sovietico della Seconda Guerra Mondiale, rivestito di una pesante corazza che proteggeva pilota e motore. Ne furono costruiti oltre 36.000, più di qualsiasi altro aereo militare della storia, e i soldati lo chiamavano «carro armato volante».</p>
+    <p class="muted">Come si chiama? (una sola parola)</p>
+    <div id="g5form" class="field">
+      <input type="text" id="g5input" aria-label="Risposta" aria-describedby="g5msg" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Scrivi qui la risposta…" enterkeyhint="done">
+    </div>
+    <div class="msg" id="g5msg" role="alert" aria-live="assertive">Risposta errata, riprova!</div>
+    <button class="btn" type="button" id="g5check">Verifica</button>
+    <div class="clue" id="g5clue">
+      <span class="tag">Indizio 5 sbloccato</span>
+      <strong>Lunghezza: circa 17 metri</strong>
+      <span class="muted">Apertura alare di circa 11,4 m: dimensioni compatte, pensate per l'impiego a bordo delle portaerei.</span>
+    </div>
+    <p></p>
+    <button class="btn" type="button" id="g5next" data-go="s-g6" hidden>Prossima prova</button>
+  </div>
+</section>
+
+<!-- =====================================================
+     MINIGIOCO 6 — ORDINAMENTO CRONOLOGICO (caccia a reazione)
+     ===================================================== -->
+<section class="screen" id="s-g6" aria-labelledby="t-g6">
+  <div class="card">
+    <div class="progress" aria-hidden="true"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i></div>
+    <div class="eyebrow">Prova 6 di 6 · Cronologia</div>
+    <h2 id="t-g6">L'era del jet</h2>
+    <p>Tocca i quattro velivoli a reazione in ordine cronologico, dal più antico al più recente, in base all'anno di primo volo. Un errore azzera la sequenza.</p>
+    <div class="chips" id="g6chips" role="group" aria-label="Velivoli da ordinare">
+      <button class="chip" type="button" data-order="4">F-22 Raptor<small>Caccia, USA</small><span class="n"></span></button>
+      <button class="chip" type="button" data-order="2">F-86 Sabre<small>Caccia, USA</small><span class="n"></span></button>
+      <button class="chip" type="button" data-order="1">Messerschmitt Me 262<small>Caccia, Germania</small><span class="n"></span></button>
+      <button class="chip" type="button" data-order="3">SR-71 Blackbird<small>Ricognitore, USA</small><span class="n"></span></button>
+    </div>
+    <div class="msg" id="g6msg" role="alert" aria-live="assertive">Sequenza errata, riprova!</div>
+    <div class="clue" id="g6clue">
+      <span class="tag">Indizio 6 sbloccato</span>
+      <strong>Tangenza: circa 15.000 m</strong>
+      <span class="muted">Può salire oltre i 15.000 metri di quota, circa 50.000 piedi.</span>
+    </div>
+    <p></p>
+    <button class="btn" type="button" id="g6next" data-go="s-sum" hidden>Vai al riepilogo</button>
+  </div>
+</section>
+
+<!-- =====================================================
+     SEZIONE — RIEPILOGO & SOLUZIONE
+     ===================================================== -->
+<section class="screen" id="s-sum" aria-labelledby="t-sum">
+  <div class="card">
+    <div class="eyebrow">Dossier completo</div>
+    <h2 id="t-sum">Qual è il velivolo segreto?</h2>
+    <ul class="dossier">
+      <li><b>Indizio 1</b><span>Caccia multiruolo, imbarcabile su portaerei.</span></li>
+      <li><b>Indizio 2</b><span>In servizio dal 1983 (primo volo nel 1978).</span></li>
+      <li><b>Indizio 3</b><span>Velocità massima Mach 1,8, circa 23.500 kg al decollo.</span></li>
+      <li><b>Indizio 4</b><span>Due motori General Electric F404, circa 71 kN ciascuno.</span></li>
+      <li><b>Indizio 5</b><span>Lunghezza circa 17 m, apertura alare circa 11,4 m.</span></li>
+      <li><b>Indizio 6</b><span>Tangenza di circa 15.000 m.</span></li>
+    </ul>
+    <p class="muted">Costruttore: McDonnell Douglas, poi Boeing. Famoso per i cieli di Top Gun. Scrivi la sigla del velivolo.</p>
+    <div id="sumform" class="field">
+      <input type="text" id="suminput" aria-label="Nome del velivolo" aria-describedby="summsg" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Es. F-16…" enterkeyhint="done">
+    </div>
+    <div class="msg" id="summsg" role="alert" aria-live="assertive">Risposta errata, riprova!</div>
+    <button class="btn" type="button" id="sumcheck">Conferma velivolo</button>
+  </div>
+</section>
+
+<!-- =====================================================
+     SEZIONE FINALE — REGALO
+     ===================================================== -->
+<section class="screen" id="s-final" aria-labelledby="t-final">
+  <div class="card center">
+    <div class="eyebrow">Missione compiuta</div>
+    <h1 id="t-final">Congratulazioni!</h1>
+    <div class="divider"></div>
+    <div class="gift">
+      Hai sbloccato il velivolo! Il tuo regalo è un'esperienza di volo reale su un simulatore 1:1 di F/18 presso Dastyflysim nella Top Gun Academy.
+    </div>
+    <!-- Il link reale viene impostato da JS partendo da CONFIG.voucherUrl (Google Drive) -->
+    <a class="btn" id="downloadBtn" href="voucherF18.zip" download="voucherF18.zip" target="_blank" rel="noopener">Scarica il Voucher (ZIP)</a>
+    <div class="divider"></div>
+    <p>Ancora tantissimi auguri di buon compleanno! Buon volo, pilota.</p>
+    <div class="signature" id="signature">Con affetto, i tuoi amici</div>
+    <p style="margin-top:22px"><button class="btn ghost" type="button" id="restart">Rigioca la missione</button></p>
+  </div>
+</section>
+
+<script>
+/* =====================================================
+   CONFIGURAZIONE — personalizza qui
+   ===================================================== */
+const CONFIG = {
+  name: "Zano",                          // nome del festeggiato
+  signature: "Con affetto, Tave Comu Maggio Teo Marta Sofi", // firma dei partecipanti al regalo
+  fadeMs: 600,
+  // Link di condivisione Google Drive dello ZIP del voucher (voucherF18.zip, con dentro tutti i
+  // file del voucher). Il file deve essere condiviso con "Chiunque abbia il link". Incolla qui il link, es.:
+  // "https://drive.google.com/file/d/XXXXXXXXXXXX/view?usp=sharing"
+  // Se lasci vuoto, il pulsante scarica il file locale voucherF18.zip.
+  voucherUrl: "https://drive.google.com/file/d/1VYBNyAJHspcinAcCqNx54c1dgbj8P-dL/view?usp=drive_link"
+};
+
+/* Converte un link di condivisione Google Drive in link di download diretto */
+function driveDownloadUrl(url) {
+  if (!url) return "";
+  const m = url.match(/\/d\/([\w-]+)/) || url.match(/[?&]id=([\w-]+)/);
+  return m ? "https://drive.google.com/uc?export=download&id=" + m[1] : url;
+}
+(() => {
+  const btn = document.getElementById("downloadBtn");
+  const link = driveDownloadUrl(CONFIG.voucherUrl);
+  if (link) { btn.href = link; btn.removeAttribute("download"); } // il download parte dal server Google
+})();
+
+/* =====================================================
+   UTILITÀ
+   ===================================================== */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+const store = {
+  get(k)   { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k,v) { try { localStorage.setItem(k, v); } catch {} },
+  del(k)   { try { localStorage.removeItem(k); } catch {} }
+};
+
+$("#bdayName").textContent = CONFIG.name;
+$("#signature").textContent = CONFIG.signature;
+
+/* =====================================================
+   NAVIGAZIONE TRA SCHERMATE (una sola visibile, sbloccate in sequenza)
+   ===================================================== */
+const ORDER = ["s-welcome", "s-g1", "s-g2", "s-g3", "s-g4", "s-g5", "s-g6", "s-sum", "s-final"];
+let current = "s-welcome";
+/* Schermate COMPLETATE. Il progresso vive solo in memoria: ricaricando la pagina si riparte dall'inizio.
+   Il benvenuto è sempre considerato completato. */
+const passed = new Set(["s-welcome"]);
+
+function canAccess(id) {
+  const idx = ORDER.indexOf(id);
+  if (idx < 0) return false;
+  // ogni schermata precedente deve essere stata superata
+  for (let i = 0; i < idx; i++) if (!passed.has(ORDER[i])) return false;
+  return true;
+}
+
+function show(id) {
+  if (!canAccess(id)) return;                      // sezione bloccata: nessun salto possibile
+  const from = $("#" + current), to = $("#" + id);
+  if (from === to) return;
+  from.classList.remove("active");
+  setTimeout(() => {
+    to.classList.add("active");
+    to.scrollTop = 0;
+    current = id;
+    const focusEl = $("input, .btn, .opt, .chip", to);
+    if (focusEl && window.matchMedia("(pointer:fine)").matches) focusEl.focus({ preventScroll: true });
+    if (id === "s-final") confetti();
+  }, CONFIG.fadeMs / 2);
+}
+/* I pulsanti di navigazione NON sbloccano nulla: portano avanti solo se le prove precedenti sono superate */
+$$("[data-go]").forEach(b => b.addEventListener("click", () => show(b.dataset.go)));
+
+/* =====================================================
+   GESTIONE ERRORI / SUCCESSI
+   ===================================================== */
+function flagError(container, msgEl, text) {
+  if (text) msgEl.textContent = text;
+  msgEl.classList.add("show");
+  container.classList.remove("error");
+  void container.offsetWidth;                        // riavvia l'animazione
+  container.classList.add("error");
+  clearTimeout(container._t);
+  container._t = setTimeout(() => { container.classList.remove("error"); }, 1800);
+}
+function clearError(container, msgEl) {
+  container.classList.remove("error");
+  msgEl.classList.remove("show");
+}
+function succeed(clueId, nextId) {
+  $("#" + clueId).classList.add("show");
+  const n = $("#" + nextId);
+  passed.add(current);                               // la prova attuale è superata
+  n.hidden = false;
+  n.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+/* ---------- Funzioni riutilizzabili per i minigiochi ---------- */
+
+/* Quiz a risposta multipla: l'opzione con data-ok="1" è quella giusta */
+function initQuiz(boxId, msgId, clueId, nextId) {
+  const box = $("#" + boxId), msg = $("#" + msgId);
+  let done = false;
+  $$(".opt", box).forEach(btn => btn.addEventListener("click", () => {
+    if (done) return;
+    if (btn.dataset.ok === "1") {
+      done = true;
+      btn.classList.add("right");
+      $$(".opt", box).forEach(o => o.disabled = true);
+      msg.classList.remove("show");
+      succeed(clueId, nextId);
+    } else {
+      btn.classList.add("wrong");
+      flagError(box, msg, "Risposta errata, riprova!");
+      setTimeout(() => btn.classList.remove("wrong"), 1200);
+    }
+  }));
+}
+
+/* Risposta libera: answers = risposte accettate, già normalizzate (minuscolo, senza spazi/punteggiatura) */
+function initText(formId, inputId, btnId, msgId, clueId, nextId, answers) {
+  const form = $("#" + formId), input = $("#" + inputId), msg = $("#" + msgId), btn = $("#" + btnId);
+  let done = false;
+  function check() {
+    if (done) return;
+    if (answers.includes(norm(input.value))) {
+      done = true;
+      input.readOnly = true;
+      input.style.borderColor = "var(--ok)";
+      btn.disabled = true;
+      clearError(form, msg);
+      succeed(clueId, nextId);
+    } else {
+      flagError(form, msg, "Risposta errata, riprova!");
+      input.select();
+    }
+  }
+  btn.addEventListener("click", check);
+  input.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } });
+  input.addEventListener("input", () => clearError(form, msg));
+}
+
+/* Ordinamento: si toccano i chip in ordine; data-order = posizione corretta; un errore azzera */
+function initOrder(boxId, msgId, clueId, nextId) {
+  const box = $("#" + boxId), msg = $("#" + msgId);
+  const total = $$(".chip", box).length;
+  let step = 1, done = false;
+  $$(".chip", box).forEach(chip => chip.addEventListener("click", () => {
+    if (done) return;
+    if (parseInt(chip.dataset.order, 10) === step) {
+      chip.classList.add("picked");
+      $(".n", chip).textContent = step;
+      msg.classList.remove("show");
+      step++;
+      if (step > total) { done = true; succeed(clueId, nextId); }
+    } else {
+      step = 1;
+      $$(".chip", box).forEach(c => { c.classList.remove("picked"); $(".n", c).textContent = ""; });
+      flagError(box, msg, "Sequenza errata, riprova!");
+    }
+  }));
+}
+
+/* ---------- Le 6 prove ---------- */
+initQuiz("g1opts", "g1msg", "g1clue", "g1next");                                   // 1: Spitfire
+initText("g2form", "g2input", "g2check", "g2msg", "g2clue", "g2next",
+         ["sherman", "m4", "m4sherman", "shermanm4"]);                              // 2: Sherman
+initOrder("g3chips", "g3msg", "g3clue", "g3next");                                  // 3: cronologia mezzi
+initQuiz("g4opts", "g4msg", "g4clue", "g4next");                                   // 4: Tiger I
+initText("g5form", "g5input", "g5check", "g5msg", "g5clue", "g5next",
+         ["sturmovik", "il2", "il2sturmovik", "ilyushin", "ilyushinil2"]);       // 5: Il-2 Sturmovik
+initOrder("g6chips", "g6msg", "g6clue", "g6next");                                  // 6: cronologia jet
+
+/* ---------- Soluzione finale ---------- */
+(() => {
+  const form = $("#sumform"), input = $("#suminput"), msg = $("#summsg");
+  function check() {
+    const n = norm(input.value);
+    // accetta: F18, F/18, F-18, F/A-18, FA18, Hornet...
+    if (n.includes("f18") || n.includes("fa18") || n.includes("hornet")) {
+      clearError(form, msg);
+      input.style.borderColor = "var(--ok)";
+      passed.add("s-sum");
+      show("s-final");
+    } else {
+      flagError(form, msg, "Risposta errata, riprova!");
+      input.select();
+    }
+  }
+  $("#sumcheck").addEventListener("click", check);
+  input.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); check(); } });
+  input.addEventListener("input", () => clearError(form, msg));
+})();
+
+/* =====================================================
+   TEMA (Notte/Azzurro ↔ Nero/Oro)
+   ===================================================== */
+const themeBtn = $("#themeBtn");
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  themeBtn.textContent = "Tema: " + (t === "gold" ? "Oro" : "Notte");
+  store.set("tg_theme", t);
+}
+applyTheme(store.get("tg_theme") === "gold" ? "gold" : "night");
+themeBtn.addEventListener("click", () => applyTheme(document.documentElement.dataset.theme === "gold" ? "night" : "gold"));
+
+/* =====================================================
+   CORIANDOLI
+   ===================================================== */
+function confetti() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const colors = [getComputedStyle(document.documentElement).getPropertyValue("--accent").trim(), "#ffffff", "#9aa4ae"];
+  for (let i = 0; i < 70; i++) {
+    const c = document.createElement("div");
+    c.className = "confetto";
+    c.style.left = Math.random() * 100 + "vw";
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = 2.5 + Math.random() * 3 + "s";
+    c.style.animationDelay = Math.random() * 1.2 + "s";
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 8000);
+  }
+}
+
+/* =====================================================
+   RIGIOCA
+   ===================================================== */
+$("#restart").addEventListener("click", () => location.reload());
+</script>
+</body>
+</html>
